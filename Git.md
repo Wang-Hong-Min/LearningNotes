@@ -380,11 +380,204 @@ git push [远程仓库地址，可用别名，如“origin”] [分支名]
 
 示例：git push origin master
 
+![1574126715216](Git_Images/1574126715216.png)
 
+origin 为远程仓库别名，不用输一长串地址。
 
+master为分支，远程库若没有，会自动创建。
 
+### 7.4 克隆
 
+进入克隆项目本地存放地址目录，执行：
 
+git clone [远程仓库地址]
 
+![1574127235079](Git_Images/1574127235079.png)
 
+效果：
+
+- 完整的把远程仓库下载到本地目录
+
+- 创建origin远程仓库别名地址
+
+    ![1574127161305](Git_Images/1574127161305.png)
+
+- 初始化本地项目
+
+    ![1574127140070](Git_Images/1574127140070.png)
+
+### 7.5 团队成员邀请
+
+### 7.6 从远端拉取代码
+
+- pull=fetch + merge
+- git fetch [远程仓库地址别名] [远程分支名]
+    - 从远程仓库拉取到本地，但不与工作区文件合并
+- git merge [远程仓库地址别名/远程分支名] 
+    - 将拉取下来的代码与工作取文件合并
+- git pull [远程仓库地址别名] [远程分支名]
+    - 拉取代码并合并文件
+
+### 7.7 解决冲突
+
+- 要点
+    - 如果不是基于GitHub最新版所做的修改不能推送，必须拉取下最新版。
+    - 拉取下来如果进入冲突状态，按分支冲突解决办法解决。
+
+### 7.8跨团队协作
+
+![1573802684653](Git_Images/1573802684653.png)
+
+步骤:
+
+- 东方不败到岳不群项目地址去fork项目到自己的远程库
+- 东方不败从自己的远程库clone到本地进行编码，完成后推送到自己的远程库
+- 东方不败发送pull request请求
+- 岳不群查看请求，确认代码，确认无误后merge到岳不群的远程仓库中。
+
+### 7.9 SSH秘钥方式（只能一个人使用）
+
+- 进入当前用户的家目录
+    $ cd ~
+- 删除.ssh 目录
+    $ rm -rvf .ssh
+-  运行命令生成.ssh 密钥目录
+    $ ssh-keygen -t rsa -C [GitHub账号邮箱]
+- 注意：这里-C  这个参数是大写的 C
+- 进入.ssh 目录查看文件列表
+    $ cd .ssh
+    $ ls -lF
+- 查看 id_rsa.pub 文件内容
+    $ cat id_rsa.pub
+- 复制 id_rsa.pub 文件内容，登录 GitHub，点击用户头像→Settings→SSH and GPG
+    keys
+    New SSH Key
+- 输入复制的密钥信息
+    回到 Git bash 创建远程地址别名
+    git remote add origin_ssh [远程仓库地址]
+    推送文件进行测试
+
+## 8.Eclipse中Git应用
+
+略。
+
+## 9.Git工作流
+
+### 9.1 概念
+
+在项目开发过程中使用 Git 的方式
+
+### 9.2 分类
+
+**集中式工作流**
+
+像 SVN 一样，集中式工作流以中央仓库作为项目所有修改的单点实体。所有
+修改都提交到 Master 这个分支上。
+这种方式与 SVN 的主要区别就是开发人员有本地库。Git 很多特性并没有用到。
+
+![](Git_Images/1574167744542.png)
+
+**GitFlow工作流**
+
+Gitflow 工作流通过为功能开发、发布准备和维护设立了独立的分支，让发布
+迭代过程更流畅。严格的分支模型也为大型项目提供了一些非常必要的结构。
+
+![1574168042558](Git_Images/1574168042558.png)
+
+**forking工作流**
+
+Forking 工作流是在 GitFlow 基础上，充分利用了 Git 的 Fork 和 pull request 的
+功能以达到代码审核的目的。更适合安全可靠地管理大团队的开发者，而且能接受
+不信任贡献者的提交。
+
+![](Git_Images/1574168097512.png)
+
+### 9.3GitFlow工作流（主流）
+
+ 主干分支 master
+		主要负责管理正在运行的生产环境代码。永远保持与正在运行的生产环境
+完全一致。
+		 开发分支 develop
+		主要负责管理正在开发过程中的代码。一般情况下应该是最新的代码。
+		 bug 修理分支 hotfix
+		主要负责管理生产环境下出现的紧急修复的代码。 从主干分支分出，修
+理完毕并测试上线后，并回主干分支。并回后，视情况可以删除该分支。
+		 准生产分支（预发布分支） release
+		较大的版本上线前，会从开发分支中分出准生产分支，进行最后阶段的集
+成测试。该版本上线后，会合并到主干分支。生产环境运行一段阶段较稳定后
+可以视情况删除。
+		 功能分支 feature
+为了不影响较短周期的开发工作，一般把中长期开发模块，会从开发分支
+中独立出来。 开发完成后会合并到开发分支。
+
+![1574167204559](Git_Images/1574167204559.png)
+
+开发过程
+
+![1574168268638](Git_Images/1574168268638.png)
+
+## 10.搭建GitLab服务器
+
+### 10.1官网地址
+
+首页：https://about.gitlab.com/
+		安装说明：https://about.gitlab.com/installation/
+
+### 10.2 安装命令摘录
+
+```linx
+sudo yum install -y curl policycoreutils-python openssh-server cronie
+sudo lokkit -s http -s ssh
+sudo yum install postfix
+sudo service postfix start
+sudo chkconfig postfix on
+curl https://packages.gitlab.com/install/repositories/gitlab/gitlab-ee/script.rpm.sh | sudo bash
+sudo EXTERNAL_URL="http://gitlab.example.com" yum -y install gitlab-ee
+```
+
+实际问题：yum 安装 gitlab-ee(或 ce)时，需要联网下载几百 M 的安装文件，非常耗
+时，所以应提前把所需 RPM 包下载并安装好。
+下载地址为：
+https://packages.gitlab.com/gitlab/gitlab-ce/packages/el/7/gitlab-ce-10.8.2-ce.0.el7.x86_64.rpm
+
+### 10.3 调整后安装命令
+
+```linx
+sudo rpm -ivh /opt/gitlab-ce-10.8.2-ce.0.el7.x86_64.rpm
+sudo yum install -y curl policycoreutils-python openssh-server cronie
+sudo lokkit -s http -s ssh
+sudo yum install postfix
+sudo service postfix start
+sudo chkconfig postfix on
+curl https://packages.gitlab.com/install/repositories/gitlab/gitlab-ce/script.rpm.sh | sudo bash
+sudo EXTERNAL_URL="http://gitlab.example.com" yum -y install gitlab-ce
+```
+
+**注意：**此处调整后需要与视频教程中CentOS7，gitlab-ce-10.8.2-ce.0.el7.x86_64.rpm配套
+
+建议：创建脚本文件，将命令写入脚本文件，保存快照。再执行安装，若出错，回到快照，仔细检查。
+
+安装完成后需要**重启**
+
+### 10.4 GitLab服务操作
+
+ 初始化配置 gitlab
+		gitlab-ctl reconfigure
+		 启动 gitlab 服务
+		gitlab-ctl start
+		 停止 gitlab 服务
+		gitlab-ctl stop
+
+### 10.5 浏览器访问
+
+访问 Linux 服务器 IP 地址即可，如果想访问 EXTERNAL_URL 指定的域名还需要配置
+域名服务器或本地 hosts 文件。
+		初次登录时需要为 gitlab 的 root 用户设置密码。
+
+![1574214734136](Git_Images/1574214734136.png)
+
+※应该会需要停止防火墙服务：（自己测试）
+				service firewalld stop
+
+正式使用应配置合适防火墙策略，开放相应端口，不能直接关闭防火墙
 
