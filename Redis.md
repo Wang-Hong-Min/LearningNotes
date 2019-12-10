@@ -958,7 +958,7 @@ redis.conf
 2. 从库配置：(命令)slaveof [主库IP] [主库端口]
 
     - 从机每次与master断开之后，都需要重新连接，除非配进从库redis.conf文件。但主机断开后，从机待命，主机正常后，从机也能正常工作。
-    - info replication 查看状态信息
+    - INFO replication 查看状态信息（info必须大写）
 
 3. 修改从库配置文件细节（一台机器，使用不同端口模拟不同机器来演示，实际上不需要，哈哈哈）
 
@@ -1008,7 +1008,7 @@ redis.conf
 
     - sentinel.conf内容
 
-        - sentinel monitor [被监控数据库名，自己起，随便] [ip] [num]
+        - sentinel monitor [被监控数据库名，自己起，随便] [ip]  [端口] [num]
         - 表示监视主机挂掉后，从机得票超过num的成为主机
 
     - 启动sentinel
@@ -1018,6 +1018,8 @@ redis.conf
     - 如果挂掉主机恢复，是否双master冲突？**如果新主机也挂掉会怎样**？
 
         原master恢复后悔变成新master的slave。
+        
+        新主机挂掉，**哨兵任然有效**，根据投票数自动将某个从库转换为主库。
 
 - 一组sentinel能够监控多个master
 
