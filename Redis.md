@@ -611,14 +611,20 @@ redis.conf
 
 ### 4.2 units单位
 
+![1575888690708](Redis_Images/1575888690708.png)
+
 - 开头定义了一些基本的度量单位，只支持bytes不支持bit
 - 对大小写不敏感
 
 ### 4.3includes 包含
 
+![1575888711773](Redis_Images/1575888711773.png)
+
 支持以redis.conf作为总配置，include [模块配置文件路径]，引入其他模块配置文件。
 
 ### 4.4 **general 通用**
+
+![1575888745327](Redis_Images/1575888745327.png)
 
 - daemonize  是否后台运行redis服务，yes——后台运行，no——命令行窗口运行
 - pidfile  指定Redis进程文件位置
@@ -642,6 +648,8 @@ redis.conf
 
 ### 4.5 shapshotting 快照
 
+![1575888770885](Redis_Images/1575888770885.png)
+
 - save
     - save [秒钟] [写操作次数]
     - 禁用 ，即不设置save命令或者参数为空
@@ -653,13 +661,21 @@ redis.conf
 
 ### 4.6 replication 复制
 
+![1575888803044](Redis_Images/1575888803044.png)
+
+
+
 ### 4.7 **security 安全** 访问密码的设置、查看、取消 
+
+![1575888833866](Redis_Images/1575888833866.png)
 
 - config get requirepass 获取密码
 - config set requirepass “password” 设置密码为password
 - auth password  客户端密码验证
 
 ### 4.8 **limits 限制**
+
+![1575888884405](Redis_Images/1575888884405.png)
 
 - maxclients  客户端最大连接数
 - maxmemory 最大占用内存，单位bytes
@@ -673,6 +689,8 @@ redis.conf
 - maxmemory-samples 设置样本数量，LRU算法和TTL算法都并非是精确算法，而是估算值，所以可以设置样本的大小，Redis默认会检查这么多个key并选择其中LRU的那个
 
 ### 4.9 append app model 追加
+
+![1575888917303](Redis_Images/1575888917303.png)
 
 - appendonly 是否打开aof策略，默认为no
 - appendfilename 设置AOF持久化文件保存名，默认为appendonly.aof
@@ -833,15 +851,23 @@ redis.conf
 
 - case1：正常执行
 
+    ![1575892606270](Redis_Images/1575892606270.png)
+
 - case2：放弃事务
+
+    ![1575892690329](Redis_Images/1575892690329.png)
 
 - case3：全体连坐
 
     加入队列时就报错，exec时所有命令都不会执行，可以理解为编译时报错
 
+    ![1575892794023](Redis_Images/1575892794023.png)
+
 - case4：冤头债主
     加入队列时未报错，exec时报错，报错这条命令不会执行，其它命令会正常执行。
 
+    ![1575892888682](Redis_Images/1575892888682.png)
+    
 - case5：watch监控
 
     - 悲观锁、乐观锁、CAS（check and set）
@@ -886,12 +912,155 @@ redis.conf
 - 没有隔离级别概念：队列中的命令没有提交之前都不会实际的被执行。因为事务提交前任何指令都不会被实际执行，也就不存在“事务内的查询要看事务里的更新，在事务外查询不能看到”这个让人万分头痛死亡问题
 - 不保证原子性：redis事务中如果有一条命令执行失败，其它的命令任然会被执行，没有回滚。
 
-## 7.Redis的发布订阅
+## 7.Redis的发布订阅（非重点）
 
+### 7.1 是什么
 
+进程间的一种消息通信模式：发送者（pub）发送消息，订阅者（sub）接受消息
+
+订阅/消息发布图：
+
+![1575939653721](Redis_Images/1575939653721.png)
+
+![1575939710279](Redis_Images/1575939710279.png)
+
+### 7.2 命令
+
+![1575944061429](Redis_Images/1575944061429.png)
+
+### 7.3 案例
+
+必须先订阅才能收到消息。
+
+1. 可以一次订阅多个，SUBSCRIBE C1 C2 C3
+2. 消息发布，PUBLISH C2 hello-redis
+
+1. 订阅多个，通配符*，
+
+    PSUBCRIBE new*（含有new的pub发送的消息都可以收到，如new1，new23等等）
+
+2. 收取消息，PUBLISH new1 redis2019
 
 ## 8.Redis的复制（master/savle）
 
+### 8.1 是什么
 
+行话：主从复制。主机（master）数据更新后根据配置和策略，自动同步到备机（slave）的master/slave复制机制。master以写为主，slave以读为主。
+
+### 8.2 作用
+
+主要是读写分离和容灾恢复
+
+### 8.3 如何用
+
+1. 配从（从库slave）不配主
+
+2. 从库配置：(命令)slaveof [主库IP] [主库端口]
+
+    - 从机每次与master断开之后，都需要重新连接，除非配进从库redis.conf文件。但主机断开后，从机待命，主机正常后，从机也能正常工作。
+    - info replication 查看状态信息
+
+3. 修改从库配置文件细节（一台机器，使用不同端口模拟不同机器来演示，实际上不需要，哈哈哈）
+
+    - 拷贝多个redis.conf文件
+    - 开启daemonize yes后台运行服务
+    - pid文件的名字
+    - 指定端口
+    - log文件名字
+    - RDB文件名字
+
+4. 常用三招
+
+    1. 1主2从
+
+        - 从机第一次连上主机会将主机数据全部备份到从机，之后主机新增的数据，从机以增量的形式备份。
+        - 主机故障，从机待命。
+        - 主从复制，读写分离。主机才能写，从机不能写。
+
+    2. 薪火相传
+
+        - 上一个slave也可以作为下一个slave的master，slave同样可以接收其它slaves的链接和同步请求，那么该slave可以作为链条中下一个slave的master，可以有效减轻master的写压力。
+        - 中途变更转向：会清除之前的数据，重新建立拷贝最新的数据
+        - 命令：slaveof [IP] [端口]
+        - 位于中间的slave任然是slave，不会变成master
+
+    3. 反客为主
+
+        slave no one（选择要作为主机的从机执行）
+
+        使当前数据库停止与其它数据库同步，转成主数据库，保留同步状态所有数据。
+
+### 8.4复制原理
+
+- slave启动成功连接到master后或发送一份sync命令。
+- master接到命令后启动后台存盘进程，同时收集所有接收到的用于修改数据集的命令，在后台进程执行完毕之后master将整个数据文件传送给slave，已完成一次完全同步。
+- 全量复制：slave服务器在接收到数据文件后，将其存盘并加载到内存中
+- 增量复制：master将收集到的修改命令依次传给slave，以完成同步
+- 只要是重新连接master，依次完全同步（全量复制）将被自动执行
+
+### 8.5哨兵模式（sentinel）
+
+- 简介：反客为主自动版，能够后台监控主机是否故障，如果主机故障将根据投票数自动将某个从库转换为主库
+
+- 使用步骤
+
+    - 在redis.conf文件同目录下新建sentinel.conf文件。
+
+    - sentinel.conf内容
+
+        - sentinel monitor [被监控数据库名，自己起，随便] [ip] [num]
+        - 表示监视主机挂掉后，从机得票超过num的成为主机
+
+    - 启动sentinel
+
+        - redis-sentinel [sentinel.conf文件目录] 
+
+    - 如果挂掉主机恢复，是否双master冲突？**如果新主机也挂掉会怎样**？
+
+        原master恢复后悔变成新master的slave。
+
+- 一组sentinel能够监控多个master
+
+### 8.6 复制缺点
+
+由于所有的写操作都是现在master上执行，然后同步更新到slave上，所有从master同步到slave上有一定的延迟，当系统很繁忙时，延迟问题会更加严重，slave数量增加也会是这个问题更加严重。
 
 ## 9.Redis的Java客户端Jedis
+
+### 9.1 Java连接redis服务步骤
+
+1. 导入相关jar包
+
+2. 启动Redis服务
+
+3. 通过Jedis对象连接redis服务
+
+    ```java
+    Jedis jedis = new Jedis("127.0.0.1",6379);//redis服务ip和端口
+    ```
+
+4. 通过【jedis.set("k1","v1");】方式执行redis命令
+
+### 9.2 Jedis各种API
+
+对应Redis各个数据类型的命令的Jedis的方法。
+
+### 9.3 Jedis事务
+
+```java
+Transaction transaction = jedis.multi();//获取事务对象，开启redis事务
+transaction.set("K1","v1");//事务指令入队
+transaction.exec();//依次执行队列中的指令
+transaction.discard();//取消事务
+transaction.watch("k1","k2","k3");//监控k1、k2、k3
+```
+
+### 9.4 Jedis 主从复制
+
+slaveof 命令对应Jedis.slaveof();
+
+### 9.5 Jedis JedisPool
+
+自定义重写连接池。
+
+要求能读懂代码即可。
